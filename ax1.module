@@ -156,6 +156,9 @@ function xmls_ax1_profiles($key) {
      seems like it could get messy. 
  */
 function xmls_ax1_createsite($site) {
+
+// CONTINUE HERE. CREATE NODE TYPE FOR SITE ON AX2 SITE. SAVE. CALL THIS ON CRON.
+
   // new node object
   $node = new stdClass();
 
@@ -167,6 +170,7 @@ function xmls_ax1_createsite($site) {
   $node->client = (isset($site->client)) ? $site->client : 1;
   $node->platform = $site->platform; 
   $node->profile = $site->profile; 
+  $node->aliases = ($site->aliases) ? $site->aliases : ''; // array
 
   // optional, defaults here will work fine
   $node->uid = ($site->uid) ? $site->uid : 1; 
@@ -191,7 +195,6 @@ function xmls_ax1_createsite($site) {
   $node->ssl = ($site->ssl) ? $site->ssl : 0;
   $node->ssl_redirect = ($site->ssl_redirect) ? $site->ssl_redirect : 0;
   $node->redirection = (isset($site->redirection)) ? $site->redirection : 1;
-  $node->aliases = ($site->aliases) ? $site->aliases : ''; // array
   $node->build_mode = ($site->build_mode) ? $site->build_mode : 0;
 
   // automatically generated on node_save (I think)
