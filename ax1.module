@@ -26,7 +26,6 @@ function ax1_menu() {
 /**
  * Implementation of hook_form_alter().
  */
-/*
 function ax1_form_alter(&$form, &$form_state, $form_id) {
 dsm($form);
 }
@@ -51,14 +50,33 @@ function ax1_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
  * Map external names of XML-RPC methods to PHP callback functions.
  */
 function ax1_xmlrpc() {
+//  $methods['ax1.domains'] = 'xmls_ax1_domains'; // @TODO
   $methods['ax1.platforms'] = 'xmls_ax1_platforms';
-  $methods['ax1.domains'] = 'xmls_ax1_domains';
+  $methods['ax1.profiles'] = 'xmls_ax1_profiles';
 //  $methods['ax1.dns'] = 'xmls_ax1_dns'; // see @TODO below
   $methods['ax1.status'] = 'xmls_ax1_status';
   $methods['ax1.createSite'] = 'xmls_ax1_createsite';
 
   return $methods;
 }
+
+/**
+ * @param $key
+ *  API key, string 
+ * 
+ * @return 
+ *  List of available wildcard domains.
+ */ 
+/*
+function xmls_ax1_domains($key) {
+  $valid_key = variable_get('ax1_api_key', FALSE);
+  if ($key == $valid_key) {
+  
+  } else {
+    return t('Invalid API key.');
+  }
+}
+// */
 
 /**
  * @param $key
@@ -84,30 +102,32 @@ function xmls_ax1_platforms($key) {
 }
 
 /**
- * @return
- *  List available packages. 
- */
-
-
-/**
  * @param $key
  *  API key, string 
  * 
- * @return 
- *  List of available wildcard domains.
- */ 
-function xmls_ax1_domains($key) {
-/*
+ * @return
+ *  List available profiles. 
+ */
+function xmls_ax1_profiles($key) {
   $valid_key = variable_get('ax1_api_key', FALSE);
   if ($key == $valid_key) {
-  
+    $profiles = array();
+    $result = db_query("SELECT nid, short_name "
+                      ."FROM {hosting_package} "
+                      ."WHERE package_type = 'profile'");
+    while ($profile = db_fetch_object($result)) {
+      $nid = $profile->nid;
+      $short_name = $profile->short_name;
+      $profiles[$nid] = $short_name;
+    }
+    return $profiles;
   } else {
     return t('Invalid API key.');
   }
-*/
 }
 
-/**
+
+/** @TODO validate domain name
  * @param
  *  $domain, string, requested domain name. 
  * 
@@ -135,10 +155,56 @@ function xmls_ax1_domains($key) {
      If multiple people sign up for sites at once, this 
      seems like it could get messy. 
  */
-function xmls_ax1_createsite() {
+function xmls_ax1_createsite($site) {
+  // new node object
+  $node = new stdClass();
 
-// CONTINUE HERE - FIGURE OUT WHAT'S NEEDED FOR A NODE_SAVE
+  // hard coded for site nodes
+  $node->type = 'site';
 
+  // required fields
+  $node->title = $site->title;       // domain
+  $node->client = (isset($site->client)) ? $site->client : 1;
+  $node->platform = $site->platform; 
+  $node->profile = $site->profile; 
+
+  // optional, defaults here will work fine
+  $node->uid = ($site->uid) ? $site->uid : 1; 
+  $node->name = ($site->uid) ? user_load($site->uid)->name : user_load(1)->name;
+  $node->language = ($site->language) ? $site->language : NULL; 
+  $node->site_language = ($site->site_language) ? $site->site_language : 'en';
+  $node->status = (isset($site->status)) ? $site->status : 1; 
+  $node->comment = (isset($site->comment)) ? $site->comment : 0;
+  $node->promote = (isset($site->promote)) ? $site->promote : 1;
+  $node->moderate = ($site->moderate) ? $site->moderate : 0;
+  $node->sticky = (isset($site->sticky)) ? $site->sticky : 0;
+  $node->tnid = (isset($site->tnid)) ? $site->tnid : 0;
+  $node->translate = (isset($site->translate)) ? $site->translate : 0;
+  $node->body = ($site->body) ? $site->body : '';
+  $node->teaser = ($site->teaser) ? $site->teaser : '';
+  $node->log = ($site->log) ? $site->log : '';
+  $node->format = ($site->format) ? $site->format : 0;
+  $node->picture = ($site->picture) ? $site->picture : '';
+  $node->db_server = ($site->db_server) ? $site->db_server : 2; // TODO required?
+  $site_status (isset($site->site_status)) ? $site->site_statu : 1;
+  $node->port = ($site->port) ? $site->port : 80;
+  $node->ssl = ($site->ssl) ? $site->ssl : 0;
+  $node->ssl_redirect = ($site->ssl_redirect) ? $site->ssl_redirect : 0;
+  $node->redirection = (isset($site->redirection)) ? $site->redirection : 1;
+  $node->aliases = ($site->aliases) ? $site->aliases : ''; // array
+  $node->build_mode = ($site->build_mode) ? $site->build_mode : 0;
+
+  // automatically generated on node_save (I think)
+  // $node->created
+  // $node->changed
+  // $node->vid
+  // $node->revision_ui
+  // $node->revision_timestamp
+  // $node->date // TODO Do we need to store anything here? 
+  // $node->last_cron
+  // $node->verified  // TODO ? 
+ 
+  node_save($node);
 }
 
 //-------------------------------
