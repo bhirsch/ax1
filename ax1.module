@@ -1,0 +1,149 @@
+<?php
+/**
+ * @file ax1.module
+ *  XML-RPC server and XML-RPC client for Aegir XML-RPC Sign Up module.
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function ax1_menu() {
+  $items = array();
+
+  $items['admin/settings/ax1'] = array(
+    'title' => t('Ax1: Aegir XML-RPC Sign Up'), 
+    'description' => t('Configure settings'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ax1_admin_settings'),
+    'access arguments' => array('administer ax'), 
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'ax1.admin.inc', 
+  );  
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+/*
+function ax1_form_alter(&$form, &$form_state, $form_id) {
+dsm($form);
+}
+// */ 
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function ax1_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  if ($op == 'view') {
+    dsm($node);
+  }
+}
+
+//-------------------------------
+// xml-rpc server
+//-------------------------------
+
+/**
+ * Implementation of hook_xmlrpc().
+ * 
+ * Map external names of XML-RPC methods to PHP callback functions.
+ */
+function ax1_xmlrpc() {
+  $methods['ax1.platforms'] = 'xmls_ax1_platforms';
+  $methods['ax1.domains'] = 'xmls_ax1_domains';
+//  $methods['ax1.dns'] = 'xmls_ax1_dns'; // see @TODO below
+  $methods['ax1.status'] = 'xmls_ax1_status';
+  $methods['ax1.createSite'] = 'xmls_ax1_createsite';
+
+  return $methods;
+}
+
+/**
+ * @param $key
+ *  API key, string 
+ * 
+ * @return 
+ *  List available platforms and corresponding node IDs.
+ */
+function xmls_ax1_platforms($key) {
+  $valid_key = variable_get('ax1_api_key', FALSE);
+  if ($key == $valid_key) {
+    $platforms = array();
+    $result = db_query("SELECT nid, title FROM node WHERE type = 'platform'");
+    while ($platform = db_fetch_object($result)) {
+      $nid = $platform->nid;
+      $title = $platform->title;
+      $platforms[$nid] = $title;
+    }
+    return $platforms;
+  } else {
+    return t('Invalid API key.');
+  }
+}
+
+/**
+ * @return
+ *  List available packages. 
+ */
+
+
+/**
+ * @param $key
+ *  API key, string 
+ * 
+ * @return 
+ *  List of available wildcard domains.
+ */ 
+function xmls_ax1_domains($key) {
+/*
+  $valid_key = variable_get('ax1_api_key', FALSE);
+  if ($key == $valid_key) {
+  
+  } else {
+    return t('Invalid API key.');
+  }
+*/
+}
+
+/**
+ * @param
+ *  $domain, string, requested domain name. 
+ * 
+ * @return
+ *  Status of requested domain.
+ */
+
+/**
+ * Check to see if domain already exists.
+ */
+
+/**
+   @TODO If people just point registrar to name
+   server and set up zone, can they just punch in 
+   their own domain name and get a site up? Is 
+   there any reason not to make name server 
+   available to public? 
+ * 
+ * @return
+ *  List of name servers.
+ */
+
+/**
+ * @TODO Set up queue here, or may be run on cron. 
+     If multiple people sign up for sites at once, this 
+     seems like it could get messy. 
+ */
+function xmls_ax1_createsite() {
+
+// CONTINUE HERE - FIGURE OUT WHAT'S NEEDED FOR A NODE_SAVE
+
+}
+
+//-------------------------------
+// xml-rpc client
+//-------------------------------
+
+
+

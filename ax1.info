@@ -1,0 +1,5 @@
+; $Id$
+name = Aegir XML-RPC Sign-Up (ax1)
+description = Sign up for websites managed by Aegir via XML-RPC. For this module to work, at least one other Drupal website must have the ax2 module installed and configured to work with ax1.
+package = Aegir
+core = 6.x
