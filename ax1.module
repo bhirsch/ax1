@@ -209,21 +209,14 @@ function xmls_ax1_createsite($key, $site) {
   // $node->last_cron
   // $node->verified  // TODO ? 
  
-  $n = node_save($node);
+  node_save($node);
  
-// CONTINUE HERE
-// IT WORKS, BUT NO RESPONSE SAYS 'FAIL' ON SUCCEED 
-
-    // verify node saved
-    if ($n) {
-      $result = 'success';
-    } else {
-      $result = 'fail'; 
-    }
-      return $result; 
-    } else {
-      return 'invalid key';
-    }
+    // tell ax2 we succeeded  
+    return 'success'; 
+  } else {
+    // notify ax2 request failed
+    return 'invalid key';
+  }
 }
 
 //-------------------------------
