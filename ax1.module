@@ -157,6 +157,7 @@ function xmls_ax1_profiles($key) {
  */
 function xmls_ax1_createsite($key, $site) {
   $valid_key = variable_get('ax1_api_key', NULL);
+  $key = base64_decode($key);
   if ($key == $valid_key) {
 
   // new node object
