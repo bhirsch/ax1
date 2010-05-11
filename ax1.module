@@ -86,6 +86,7 @@ function xmls_ax1_domains($key) {
  *  List available platforms and corresponding node IDs.
  */
 function xmls_ax1_platforms($key) {
+  $key = base64_decode($key); 
   $valid_key = variable_get('ax1_api_key', FALSE);
   if ($key == $valid_key) {
     $platforms = array();
@@ -109,6 +110,7 @@ function xmls_ax1_platforms($key) {
  *  List available profiles. 
  */
 function xmls_ax1_profiles($key) {
+  $key = base64_decode($key); 
   $valid_key = variable_get('ax1_api_key', FALSE);
   if ($key == $valid_key) {
     $profiles = array();
