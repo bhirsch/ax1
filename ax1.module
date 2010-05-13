@@ -50,6 +50,7 @@ function ax1_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
  * Map external names of XML-RPC methods to PHP callback functions.
  */
 function ax1_xmlrpc() {
+  $methods['ax1.domain'] = 'xmls_ax1_domain';
   $methods['ax1.platforms'] = 'xmls_ax1_platforms';
   $methods['ax1.profiles'] = 'xmls_ax1_profiles';
   $methods['ax1.status'] = 'xmls_ax1_status';
@@ -59,22 +60,44 @@ function ax1_xmlrpc() {
 }
 
 /**
- * @param $key
- *  API key, string 
+ * callback for xml-rpc ax1.domain
+ * 
+ * Check availability of requested (sub)domain.
+ * Don't worry about aliases. This is their issue. 
+ * They should know if they own it. And they have
+ * to contact us to set aliases up anyway.
+ * 
+ * @param 
+ *  $site, array of info about site.
  * 
  * @return 
- *  Validate availability of domains.
+ *  Boolean. Validate/Invalidate availability of domains.
  */ 
-function ax1_validate_domains($domains) {
-  $valid_key = variable_get('ax1_api_key', FALSE);
+function xmls_ax1_domain($key, $domain) {
+
+  // validate key
+  $valid_key = variable_get('ax1_api_key', NULL);
+  $key = base64_decode($key);
   if ($key == $valid_key) {
-    // TODO validate domain. Note
-    // return $something like valid/invalid
+
+    // get a list of domains that are in use (not available)
+    $result = db_query("SELECT title FROM {node} WHERE type = 'site'");
+    while ($existing_domain = db_fetch_array($result)) {
+      $unavailable[] = $existing_domain['title']; 
+    }
+    // check to see if the requested domain is in the array
+    if (in_array($domain, $unavailable)) {
+      // someone already has this domain
+      return FALSE;
+    } else {
+      // it's available!
+      return TRUE; 
+    }
+
   } else {
-    return t('Invalid API key.');
+    return 'invalid key';
   }
 }
-// */
 
 /**
  * @param $key
@@ -132,15 +155,12 @@ function xmls_ax1_profiles($key) {
  *   seems like it could get messy. 
  */
 function xmls_ax1_createsite($key, $site) {
+
   // validate key
   $valid_key = variable_get('ax1_api_key', NULL);
   $key = base64_decode($key);
-  // validate domain name (and aliases) 
-  // TODO 
-  // $valid_domains = ax1_validate_domains($domains);
-  // if ($key == $valid_key && $valid_domains) {
   if ($key == $valid_key) {
-    
+
     // new node object
     $node = new stdClass();
 
@@ -193,10 +213,7 @@ function xmls_ax1_createsite($key, $site) {
  
     // tell ax2 we succeeded  
     return 'success'; 
-  } else {
-    // notify ax2 request failed
-    return 'invalid key';
-  }
+  }  
 }
 
 //-------------------------------
