@@ -50,10 +50,8 @@ function ax1_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
  * Map external names of XML-RPC methods to PHP callback functions.
  */
 function ax1_xmlrpc() {
-//  $methods['ax1.domains'] = 'xmls_ax1_domains'; // @TODO
   $methods['ax1.platforms'] = 'xmls_ax1_platforms';
   $methods['ax1.profiles'] = 'xmls_ax1_profiles';
-//  $methods['ax1.dns'] = 'xmls_ax1_dns'; // see @TODO below
   $methods['ax1.status'] = 'xmls_ax1_status';
   $methods['ax1.createSite'] = 'xmls_ax1_createsite';
 
@@ -65,13 +63,13 @@ function ax1_xmlrpc() {
  *  API key, string 
  * 
  * @return 
- *  List of available wildcard domains.
+ *  Validate availability of domains.
  */ 
-/*
-function xmls_ax1_domains($key) {
+function ax1_validate_domains($domains) {
   $valid_key = variable_get('ax1_api_key', FALSE);
   if ($key == $valid_key) {
-  
+    // TODO validate domain. Note
+    // return $something like valid/invalid
   } else {
     return t('Invalid API key.');
   }
@@ -128,90 +126,70 @@ function xmls_ax1_profiles($key) {
   }
 }
 
-
-/** @TODO validate domain name
- * @param
- *  $domain, string, requested domain name. 
- * 
- * @return
- *  Status of requested domain.
- */
-
 /**
- * Check to see if domain already exists.
- */
-
-/**
-   @TODO If people just point registrar to name
-   server and set up zone, can they just punch in 
-   their own domain name and get a site up? Is 
-   there any reason not to make name server 
-   available to public? 
- * 
- * @return
- *  List of name servers.
- */
-
-/**
- * @TODO Set up queue here, or may be run on cron. 
-     If multiple people sign up for sites at once, this 
-     seems like it could get messy. 
+ * @todo Set up queue here, or may be run on cron. 
+ *   If multiple people sign up for sites at once, this 
+ *   seems like it could get messy. 
  */
 function xmls_ax1_createsite($key, $site) {
+  // validate key
   $valid_key = variable_get('ax1_api_key', NULL);
   $key = base64_decode($key);
+  // validate domain name (and aliases) 
+  // TODO 
+  // $valid_domains = ax1_validate_domains($domains);
+  // if ($key == $valid_key && $valid_domains) {
   if ($key == $valid_key) {
+    
+    // new node object
+    $node = new stdClass();
 
-  // new node object
-  $node = new stdClass();
+    // hard coded for site nodes
+    $node->type = 'site';
 
-  // hard coded for site nodes
-  $node->type = 'site';
+    // required fields
+    $node->title = $site['title'];       // domain
+    $node->client = (isset($site['client'])) ? $site['client'] : 1;
+    $node->platform = $site['platform']; 
+    $node->profile = $site['profile']; 
+    $node->aliases = ($site['aliases']) ? $site['aliases'] : ''; // array
 
-// MAYBE IT'S EXPECTING AN ARRAY
-  // required fields
-  $node->title = $site['title'];       // domain
-  $node->client = (isset($site['client'])) ? $site['client'] : 1;
-  $node->platform = $site['platform']; 
-  $node->profile = $site['profile']; 
-  $node->aliases = ($site['aliases']) ? $site['aliases'] : ''; // array
-
-  // optional, defaults here will work fine
-  $node->uid = $site['uid'] ? $site['uid'] : 1; 
-  $node->name = $site['uid'] ? user_load($site['uid'])->name : user_load(1)->name;
-  $node->language = ($site['language']) ? $site['language'] : NULL; 
-  $node->site_language = $site['site_language'] ? $site['site_language'] : 'en';
-  $node->status = (isset($site['status'])) ? $site['status'] : 1; 
-  $node->comment = (isset($site['comment'])) ? $site['comment'] : 0;
-  $node->promote = (isset($site['promote'])) ? $site['promote'] : 1;
-  $node->moderate = ($site['moderate']) ? $site['moderate'] : 0;
-  $node->sticky = (isset($site['sticky'])) ? $site['sticky'] : 0;
-  $node->tnid = (isset($site['tnid'])) ? $site['tnid'] : 0;
-  $node->translate = (isset($site['translate'])) ? $site['translate'] : 0;
-  $node->body = ($site['body']) ? $site['body'] : '';
-  $node->teaser = ($site['teaser']) ? $site['teaser'] : '';
-  $node->log = ($site['log']) ? $site['log'] : '';
-  $node->format = ($site['format']) ? $site['format'] : 0;
-  $node->picture = ($site['picture']) ? $site['picture'] : '';
-  $node->db_server = ($site['db_server']) ? $site['db_server'] : 2; // TODO required?
-  $site_status = (isset($site['site_status'])) ? $site['site_status'] : 1;
-  $node->port = ($site['port']) ? $site['port'] : 80;
-  $node->ssl = ($site['ssl']) ? $site['ssl'] : 0;
-  $node->ssl_redirect = ($site['ssl_redirect']) ? $site['ssl_redirect'] : 0;
-  $node->redirection = (isset($site['redirection'])) ? $site['redirection'] : 1;
-  $node->build_mode = ($site['build_mode']) ? $site['build_mode'] : 0;
-
-  // automatically generated on node_save (I think)
-  // $node->created
-  // $node->changed
-  // $node->vid
-  // $node->revision_ui
-  // $node->revision_timestamp
-  // $node->date // TODO Do we need to store anything here? 
-  // $node->last_cron
-  // $node->verified  // TODO ? 
+    // optional, defaults here will work fine
+    $node->uid = $site['uid'] ? $site['uid'] : 1; 
+    $node->name = $site['uid'] ? user_load($site['uid'])->name : user_load(1)->name;
+    $node->language = ($site['language']) ? $site['language'] : NULL; 
+    $node->site_language = $site['site_language'] ? $site['site_language'] : 'en';
+    $node->status = (isset($site['status'])) ? $site['status'] : 1; 
+    $node->comment = (isset($site['comment'])) ? $site['comment'] : 0;
+    $node->promote = (isset($site['promote'])) ? $site['promote'] : 1;
+    $node->moderate = ($site['moderate']) ? $site['moderate'] : 0;
+    $node->sticky = (isset($site['sticky'])) ? $site['sticky'] : 0;
+    $node->tnid = (isset($site['tnid'])) ? $site['tnid'] : 0;
+    $node->translate = (isset($site['translate'])) ? $site['translate'] : 0;
+    $node->body = ($site['body']) ? $site['body'] : '';
+    $node->teaser = ($site['teaser']) ? $site['teaser'] : '';
+    $node->log = ($site['log']) ? $site['log'] : '';
+    $node->format = ($site['format']) ? $site['format'] : 0;
+    $node->picture = ($site['picture']) ? $site['picture'] : '';
+    $node->db_server = ($site['db_server']) ? $site['db_server'] : 2; // todo required?
+    $site_status = (isset($site['site_status'])) ? $site['site_status'] : 1;
+    $node->port = ($site['port']) ? $site['port'] : 80;
+    $node->ssl = ($site['ssl']) ? $site['ssl'] : 0;
+    $node->ssl_redirect = ($site['ssl_redirect']) ? $site['ssl_redirect'] : 0;
+    $node->redirection = (isset($site['redirection'])) ? $site['redirection'] : 1;
+    $node->build_mode = ($site['build_mode']) ? $site['build_mode'] : 0;
+  
+    // automatically generated on node_save (I think)
+    // $node->created
+    // $node->changed
+    // $node->vid
+    // $node->revision_ui
+    // $node->revision_timestamp
+    // $node->date 
+    // $node->last_cron
+    // $node->verified  // 
  
-  node_save($node);
+    node_save($node);
  
     // tell ax2 we succeeded  
     return 'success'; 
