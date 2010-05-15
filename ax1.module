@@ -62,38 +62,73 @@ function ax1_xmlrpc() {
 /**
  * callback for xml-rpc ax1.domain
  * 
- * Check availability of requested (sub)domain.
- * Don't worry about aliases. This is their issue. 
- * They should know if they own it. And they have
- * to contact us to set aliases up anyway.
+ * Check availability of requested (sub)domain
+ * and aliases.
  * 
  * @param 
- *  $site, array of info about site.
+ *  $domain, string.
+ * 
+ * @param
+ *  $aliases, array of alias names.
  * 
  * @return 
- *  Boolean. Validate/Invalidate availability of domains.
+ *  Array. array('domain' => TRUE/FALSE, 'alias' => TRUE/FALSE, 'message' => array($messages));
+ *  Validate/Invalidate availability of domains
+ *  and aliases. 
  */ 
-function xmls_ax1_domain($key, $domain) {
+function xmls_ax1_domain($key, $domain, $aliases) {
 
   // validate key
   $valid_key = variable_get('ax1_api_key', NULL);
   $key = base64_decode($key);
   if ($key == $valid_key) {
 
+    // 
+    $a = array(
+      'domain' => TRUE, // turn false when this fails validation
+      'alias' => TRUE,  // turn false when this fails validation
+      'message' => array(),  // set explaination messages if domain or alias fails
+    );
+
     // get a list of domains that are in use (not available)
     $result = db_query("SELECT title FROM {node} WHERE type = 'site'");
     while ($existing_domain = db_fetch_array($result)) {
       $unavailable[] = $existing_domain['title']; 
     }
-    // check to see if the requested domain is in the array
+    // get aliases in use
+    $result = db_query("SELECT alias FROM {hosting_site_alias} ");
+    while ($existing_alias = db_fetch_array($result)) {
+      $unavailable[] = $existing_alias['alias']; 
+    }
+    
+    // test requested domain against domains and aliases in use
     if (in_array($domain, $unavailable)) {
       // someone already has this domain
-      return FALSE;
+      $a['domain'] = FALSE;
+      $a['message'][] = t('Sorry, the domain !domain is not available. ' 
+              .'Please try another domain. ', array('!domain' => $domain));  
     } else {
-      // it's available!
-      return TRUE; 
+      // it's available
+      $a['domain'] = TRUE;
     }
 
+    // test requested aliases against domains and aliases in use
+    $alias_fail = '';
+    foreach ($aliases as $alias) {
+      if (in_array($alias, $unavailable)) {
+        // todo figure out why this only evaluates to true for one 
+        //  alias, even when many are unavailable 
+        //
+        // someone already has this domain
+        $a['alias'] = FALSE;
+        $alias_fail .= ($alias_fail) ? ', '. $alias : $alias;
+      }
+    }
+    if (!$a['alias']){
+      $a['message'][] = t('Sorry, this alias is not available: !alias. ',
+                         array('!alias' => $alias_fail));  
+    }
+    return $a;
   } else {
     return 'invalid key';
   }
