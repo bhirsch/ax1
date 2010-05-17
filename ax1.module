@@ -169,15 +169,8 @@ function xmls_ax1_profiles($key) {
   $key = base64_decode($key); 
   $valid_key = variable_get('ax1_api_key', FALSE);
   if ($key == $valid_key) {
-    $profiles = array();
-    $result = db_query("SELECT nid, short_name "
-                      ."FROM {hosting_package} "
-                      ."WHERE package_type = 'profile'");
-    while ($profile = db_fetch_object($result)) {
-      $nid = $profile->nid;
-      $short_name = $profile->short_name;
-      $profiles[$nid] = $short_name;
-    }
+    $profiles = hosting_get_profiles();
+
     return $profiles;
   } else {
     return t('Invalid API key.');
