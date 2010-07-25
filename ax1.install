@@ -1,0 +1,30 @@
+<?php
+/**
+ * @file ax1.install
+ */
+/**
+ * Implementation of hook_install().
+ */
+function ax1_install() {
+  drupal_install_schema('ax1');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function ax1_uninstall() {
+  drupal_uninstall_schema('ax1');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function ax1_schema() {
+  $schema['ax1_zones'] = array(); // CONTINUE HERE
+  // domain
+  // site_nid
+  // zone_created -> TRUE/FALSE
+  // type -> domain/alias
+  // has_alias -> true/false
+  // redirect -> TRUE/FALSE
+}
